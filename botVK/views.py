@@ -6,6 +6,7 @@ import vk
 import random
 import os
 import dialogflow
+import database
 from google.api_core.exceptions import InvalidArgument
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'web-gromily-ofrufe-751df123f0db.json'
@@ -34,30 +35,52 @@ def bot(request):
 
     if body['type'] == 'message_new':
         print(body['object']['message'])
-        message = body['object']['message']['text']
-        user_id = body['object']['message']['from_id']
-
-        if len(message) > 0:
-            text_input = dialogflow.types.TextInput(text=message, language_code=DIALOGFLOW_LANGUAGE_CODE)
-            query_input = dialogflow.types.QueryInput(text=text_input)
-            try:
-                response = session_client.detect_intent(session=df_session, query_input=query_input)
-                send(user_id, response.query_result.fulfillment_text)
-            except InvalidArgument:
-                raise
+        if body['object']['message'].get('payload'):
+            user_id = body['object']['message']['from_id']
+            payload = json.loads(body['object']['message'].get('payload'))
+            if payload == {"command": "start"}:
+                keyboard = {
+                    'buttons': [
+                        [
+                            {'action': {'type': 'text', 'label': '   ', 'payload': """{"button": 1}"""},
+                             'color': 'primary'},
+                            {'action': {'type': 'text', 'label': 'Не кнопка', 'payload': """{"button": 2}"""},
+                             'color': 'positive'},
+                            {'action': {'type': 'text', 'label': 'Кнопка', 'payload': """{"button": 3}"""},
+                             'color': 'negative'}
+                        ]
+                    ],
+                    'one_time': True}
+                send(user_id, "Нажми на кнопку", json.dumps(keyboard))
+            elif payload.get('button'):
+                button = payload.get('button')
+                database.insert('user', ['id', 'groupId'], [(user_id, button)])
+                send(user_id, "Спасибо за ответ")
         else:
-            send(user_id, "Ого, а где текст? Я такого не понимаю")
-        # print("Query text:", response.query_result.query_text)
-        # print("Detected intent:", response.query_result.intent.display_name)
-        # print("Detected intent confidence:", response.query_result.intent_detection_confidence)
-        # print("Fulfillment text:", response.query_result.fulfillment_text)
+            message = body['object']['message']['text']
+            user_id = body['object']['message']['from_id']
+
+            if len(message) > 0:
+                text_input = dialogflow.types.TextInput(text=message, language_code=DIALOGFLOW_LANGUAGE_CODE)
+                query_input = dialogflow.types.QueryInput(text=text_input)
+                try:
+                    response = session_client.detect_intent(session=df_session, query_input=query_input)
+                    send(user_id, response.query_result.fulfillment_text)
+                except InvalidArgument:
+                    raise
+            else:
+                send(user_id, "Ого, а где текст? Я такого не понимаю")
+            # print("Query text:", response.query_result.query_text)
+            # print("Detected intent:", response.query_result.intent.display_name)
+            # print("Detected intent confidence:", response.query_result.intent_detection_confidence)
+            # print("Fulfillment text:", response.query_result.fulfillment_text)
 
         return HttpResponse('ok')
 
 
-def send(user_id, message):
+def send(user_id, message, keyboard=None):
     api.messages.send(v='5.103', user_id=user_id, message=message,
-                      random_id=random.getrandbits(64))
+                      random_id=random.getrandbits(64), keyboard=keyboard)
 
 # {'type': 'message_new', 'object': {'message': {'date': 1587272596, 'from_id': 190709425, 'id': 6, 'out': 0,
 # 'peer_id': 190709425, 'text': 'qwe', 'conversation_message_id': 6, 'fwd_messages': [], 'important': False,

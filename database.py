@@ -66,6 +66,8 @@ def delete(table_name, field, value):
 # delete('cars', 'number', 6451)
 # print(get('cars'))
 
-create('groups', [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'), ('groupName', 'TEXT')])
-create('user', [('id', 'INTEGER'), ('groupId', 'INTEGER'),
-                ('FOREIGN KEY("groupId")', 'REFERENCES "groups"("id")')])
+# create('groups', [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'), ('groupName', 'TEXT')])
+# create('user', [('id', 'INTEGER'), ('groupId', 'INTEGER'),
+#                 ('FOREIGN KEY("groupId")', 'REFERENCES "groups"("id")')])
+
+# insert('groups', ['groupName'], [(' ',), ('Не кнопка',), ('Кнопка',)])
