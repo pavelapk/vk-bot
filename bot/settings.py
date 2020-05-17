@@ -52,7 +52,7 @@ ROOT_URLCONF = 'bot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['./botVK/Templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

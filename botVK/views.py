@@ -54,7 +54,10 @@ def bot(request):
                 send(user_id, "Нажми на кнопку", json.dumps(keyboard))
             elif payload.get('button'):
                 button = payload.get('button')
-                database.insert('user', ['id', 'groupId'], [(user_id, button)])
+                if not database.get('user', 'id=' + str(user_id)):
+                    database.insert('user', ['id', 'groupId'], [(user_id, button)])
+                else:
+                    database.update('user', ['groupId'], [button], 'id=' + str(user_id))
                 send(user_id, "Спасибо за ответ")
         else:
             message = body['object']['message']['text']
@@ -82,8 +85,29 @@ def send(user_id, message, keyboard=None):
     api.messages.send(v='5.103', user_id=user_id, message=message,
                       random_id=random.getrandbits(64), keyboard=keyboard)
 
+
 # {'type': 'message_new', 'object': {'message': {'date': 1587272596, 'from_id': 190709425, 'id': 6, 'out': 0,
 # 'peer_id': 190709425, 'text': 'qwe', 'conversation_message_id': 6, 'fwd_messages': [], 'important': False,
 # 'random_id': 0, 'att achments': [], 'is_hidden': False}, 'client_info': {'button_actions': ['text', 'vkpay',
 # 'open_app', 'location', 'open_link'], 'keyboard': True, 'inline_keyboard': True, 'lang_id': 0}}, 'group_id':
 # 194135907, 'event_id': 'f79b505cdc0907 3286cdb6fe61376dda50225e80'}
+
+lg = {
+    'success': False
+}
+
+
+def login(request):
+    global lg
+
+    print(request.GET)
+    if request.GET.get('login') == 'admin' and request.GET.get('pass') == '123':
+        print("sadasd")
+        lg['success'] = True
+        lg['groups'] = database.get('groups')
+    elif 'spam' in request.GET:
+        group = request.GET.get('group')
+        message = request.GET.get('message')
+        for user in database.get('user', 'groupId=' + group):
+            send(user[0], message)
+    return render(request, "login.html", lg)

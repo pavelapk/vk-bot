@@ -37,10 +37,19 @@ def insert(table_name, fields, data):
     db.close()
 
 
-def get(table_name):
+def update(table_name, fields, data, where):
     db = sqlite3.connect('db.sqlite3')
     cur = db.cursor()
-    cur.execute("SELECT * FROM " + table_name)
+    cur.execute("UPDATE " + table_name + " SET " + ','.join(
+        [fields[i] + '=' + str(data[i]) for i in range(len(fields))]) + " WHERE " + where)
+    db.commit()
+    db.close()
+
+
+def get(table_name, where='1'):
+    db = sqlite3.connect('db.sqlite3')
+    cur = db.cursor()
+    cur.execute("SELECT * FROM " + table_name + " WHERE " + where)
     result = cur.fetchall()
     db.close()
     return result
@@ -64,7 +73,7 @@ def delete(table_name, field, value):
 # ])
 #
 # delete('cars', 'number', 6451)
-# print(get('cars'))
+print(get('groups'))
 
 # create('groups', [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'), ('groupName', 'TEXT')])
 # create('user', [('id', 'INTEGER'), ('groupId', 'INTEGER'),

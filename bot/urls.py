@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from botVK.views import bot
+import botVK.views as views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('botVK/', bot),
+    path('botVK/', views.bot),
+    path('login/', views.login)
 ]
