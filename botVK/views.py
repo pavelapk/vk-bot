@@ -13,10 +13,6 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'web-gromily-ofrufe-751df123f0db.
 
 DIALOGFLOW_PROJECT_ID = 'web-gromily-ofrufe'
 DIALOGFLOW_LANGUAGE_CODE = 'ru'
-SESSION_ID = 'me'
-
-session_client = dialogflow.SessionsClient()
-df_session = session_client.session_path(DIALOGFLOW_PROJECT_ID, SESSION_ID)
 
 token = os.getenv("VK_TOKEN")
 session = vk.Session(access_token=token)
@@ -39,18 +35,7 @@ def bot(request):
             user_id = body['object']['message']['from_id']
             payload = json.loads(body['object']['message'].get('payload'))
             if payload == {"command": "start"}:
-                keyboard = {
-                    'buttons': [
-                        [
-                            {'action': {'type': 'text', 'label': '   ', 'payload': """{"button": 1}"""},
-                             'color': 'primary'},
-                            {'action': {'type': 'text', 'label': 'Не кнопка', 'payload': """{"button": 2}"""},
-                             'color': 'positive'},
-                            {'action': {'type': 'text', 'label': 'Кнопка', 'payload': """{"button": 3}"""},
-                             'color': 'negative'}
-                        ]
-                    ],
-                    'one_time': True}
+                keyboard = getKeyboard()
                 send(user_id, "Нажми на кнопку", json.dumps(keyboard))
             elif payload.get('button'):
                 button = payload.get('button')
@@ -64,21 +49,44 @@ def bot(request):
             user_id = body['object']['message']['from_id']
 
             if len(message) > 0:
+                session_client = dialogflow.SessionsClient()
+                df_session = session_client.session_path(DIALOGFLOW_PROJECT_ID, user_id)
                 text_input = dialogflow.types.TextInput(text=message, language_code=DIALOGFLOW_LANGUAGE_CODE)
                 query_input = dialogflow.types.QueryInput(text=text_input)
                 try:
                     response = session_client.detect_intent(session=df_session, query_input=query_input)
-                    send(user_id, response.query_result.fulfillment_text)
+                    if response.query_result.action == "update_group":
+                        keyboard = getKeyboard()
+                        send(user_id, response.query_result.fulfillment_text, json.dumps(keyboard))
+                    else:
+                        send(user_id, response.query_result.fulfillment_text)
+                    print("Query text:", response.query_result.query_text)
+                    print("intent/action:",
+                          response.query_result.intent.display_name + "/" + response.query_result.action)
+                    print("Detected intent confidence:", response.query_result.intent_detection_confidence)
+                    print("Fulfillment text:", response.query_result.fulfillment_text)
                 except InvalidArgument:
                     raise
             else:
                 send(user_id, "Ого, а где текст? Я такого не понимаю")
-            # print("Query text:", response.query_result.query_text)
-            # print("Detected intent:", response.query_result.intent.display_name)
-            # print("Detected intent confidence:", response.query_result.intent_detection_confidence)
-            # print("Fulfillment text:", response.query_result.fulfillment_text)
 
         return HttpResponse('ok')
+
+
+def getKeyboard():
+    keyboard = {
+        'buttons': [
+            [
+                {'action': {'type': 'text', 'label': '   ', 'payload': """{"button": 1}"""},
+                 'color': 'primary'},
+                {'action': {'type': 'text', 'label': 'Не кнопка', 'payload': """{"button": 2}"""},
+                 'color': 'positive'},
+                {'action': {'type': 'text', 'label': 'Кнопка', 'payload': """{"button": 3}"""},
+                 'color': 'negative'}
+            ]
+        ],
+        'one_time': True}
+    return keyboard
 
 
 def send(user_id, message, keyboard=None):
@@ -100,14 +108,14 @@ lg = {
 def login(request):
     global lg
 
-    print(request.GET)
-    if request.GET.get('login') == 'admin' and request.GET.get('pass') == '123':
+    print(request.POST)
+    if request.POST.get('login') == 'admin' and request.POST.get('pass') == '123':
         print("sadasd")
         lg['success'] = True
         lg['groups'] = database.get('groups')
-    elif 'spam' in request.GET:
-        group = request.GET.get('group')
-        message = request.GET.get('message')
+    elif 'spam' in request.POST:
+        group = request.POST.get('group')
+        message = request.POST.get('message')
         for user in database.get('user', 'groupId=' + group):
             send(user[0], message)
     return render(request, "login.html", lg)
