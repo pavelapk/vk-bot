@@ -1,1 +1,1 @@
-web: gunicorn botvk.wsgi
+web: gunicorn bot.wsgi
