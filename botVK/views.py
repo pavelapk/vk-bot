@@ -27,7 +27,7 @@ print("START")
 def bot(request):
     body = json.loads(request.body)
     if body == {"type": "confirmation", "group_id": 194135907}:
-        return HttpResponse('2344e407')
+        return HttpResponse('2e71f495')
 
     if body['type'] == 'message_new':
         print(body['object']['message'])
