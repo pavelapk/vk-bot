@@ -9,7 +9,7 @@ import dialogflow
 import database
 from google.api_core.exceptions import InvalidArgument
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'web-gromily-ofrufe-751df123f0db.json'
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'web-gromily-ofrufe-751df123f0db.json'
 
 DIALOGFLOW_PROJECT_ID = 'web-gromily-ofrufe'
 DIALOGFLOW_LANGUAGE_CODE = 'ru'
